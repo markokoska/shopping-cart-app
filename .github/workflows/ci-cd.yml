@@ -64,4 +64,4 @@ jobs:
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
-"@ | Out-File -FilePath ".github\workflows\ci-cd.yml" -Encoding UTF8
+"
