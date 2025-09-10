@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  database:
+    image: postgres:15-alpine
+    container_name: shopping-cart-db-staging
+    environment:
+      POSTGRES_DB: shoppingcart_staging
+      POSTGRES_USER: shoppingcart_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_staging_data:/var/lib/postgresql/data
+    networks:
+      - shopping-cart-network
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: shopping-cart-redis-staging
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_staging_data:/data
+    networks:
+      - shopping-cart-network
+    restart: unless-stopped
+
+  backend:
+    image: ghcr.io/${GITHUB_REPOSITORY}/backend:latest
+    container_name: shopping-cart-backend-staging
+    ports:
+      - "8081:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=staging
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://database:5432/shoppingcart_staging
+      - SPRING_DATASOURCE_USERNAME=shoppingcart_user
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.PostgreSQLDialect
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
+    depends_on:
+      - database
+      - redis
+    networks:
+      - shopping-cart-network
+    restart: unless-stopped
+
+  frontend:
+    image: ghcr.io/${GITHUB_REPOSITORY}/frontend:latest
+    container_name: shopping-cart-frontend-staging
+    ports:
+      - "3001:80"
+    depends_on:
+      - backend
+    networks:
+      - shopping-cart-network
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    container_name: shopping-cart-nginx-staging
+    ports:
+      - "81:80"
+    volumes:
+      - ./nginx/nginx.staging.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - shopping-cart-network
+    restart: unless-stopped
+
+networks:
+  shopping-cart-network:
+    driver: bridge
+
+volumes:
+  postgres_staging_data:
+    driver: local
+  redis_staging_data:
+    driver: local

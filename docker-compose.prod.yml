@@ -1,0 +1,104 @@
+version: '3.8'
+
+services:
+  database:
+    image: postgres:15-alpine
+    container_name: shopping-cart-db-prod
+    environment:
+      POSTGRES_DB: shoppingcart_prod
+      POSTGRES_USER: shoppingcart_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+      - ./database/backups:/backups
+    networks:
+      - shopping-cart-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shoppingcart_user -d shoppingcart_prod"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  redis:
+    image: redis:7-alpine
+    container_name: shopping-cart-redis-prod
+    volumes:
+      - redis_prod_data:/data
+    networks:
+      - shopping-cart-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  backend:
+    image: ghcr.io/${GITHUB_REPOSITORY}/backend:latest
+    container_name: shopping-cart-backend-prod
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=production
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://database:5432/shoppingcart_prod
+      - SPRING_DATASOURCE_USERNAME=shoppingcart_user
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=validate
+      - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.PostgreSQLDialect
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRATION=${JWT_EXPIRATION}
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - shopping-cart-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    image: ghcr.io/${GITHUB_REPOSITORY}/frontend:latest
+    container_name: shopping-cart-frontend-prod
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - shopping-cart-network
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    container_name: shopping-cart-nginx-prod
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - shopping-cart-network
+    restart: unless-stopped
+
+networks:
+  shopping-cart-network:
+    driver: bridge
+
+volumes:
+  postgres_prod_data:
+    driver: local
+  redis_prod_data:
+    driver: local

@@ -140,3 +140,129 @@ The application automatically creates the following tables:
 - Backend logs: Check console output when running Spring Boot
 - Frontend logs: Check browser developer console
 - Database logs: Enable SQL logging in `application.properties`
+
+## Docker Setup
+
+### Prerequisites
+- Docker Desktop installed and running
+- Docker Compose (included with Docker Desktop)
+
+### Quick Start with Docker
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/shopping-cart-app.git
+   cd shopping-cart-app
+   ```
+
+2. **Build and run with Docker Compose**
+   ```bash
+   docker-compose up --build
+   ```
+
+3. **Access the application**
+    - Frontend: http://localhost:3000
+    - Backend API: http://localhost:8080
+    - H2 Console: http://localhost:8080/h2-console
+
+### Docker Commands
+
+**Build and start all services:**
+```bash
+docker-compose up --build
+```
+
+**Start in background (detached mode):**
+```bash
+docker-compose up -d --build
+```
+
+**Stop all services:**
+```bash
+docker-compose down
+```
+
+**View logs:**
+```bash
+docker-compose logs -f
+```
+
+**Rebuild specific service:**
+```bash
+docker-compose up --build backend
+docker-compose up --build frontend
+```
+
+**Clean up (remove containers, networks, volumes):**
+```bash
+docker-compose down -v --rmi all
+```
+
+### Individual Container Commands
+
+**Build backend only:**
+```bash
+docker build -t shopping-cart-backend .
+```
+
+**Build frontend only:**
+```bash
+docker build -t shopping-cart-frontend ./frontend
+```
+
+**Run backend container:**
+```bash
+docker run -p 8080:8080 -v $(pwd)/data:/app/data shopping-cart-backend
+```
+
+**Run frontend container:**
+```bash
+docker run -p 3000:80 shopping-cart-frontend
+```
+```
+
+### Step 9: Build and Test Your Dockerized Application
+
+**9.1 Build the application:**
+```bash
+cd "C:\Users\Markt\ShoppingCart3"
+docker-compose up --build
+```
+
+**9.2 Test the application:**
+- Open http://localhost:3000 in your browser
+- Test the API at http://localhost:8080/api/products
+- Check H2 console at http://localhost:8080/h2-console
+
+**9.3 Stop the application:**
+```bash
+docker-compose down
+```
+
+### Step 10: Push to GitHub
+
+**10.1 Add Docker files to git:**
+```bash
+git add .
+git commit -m "Add Docker support with docker-compose"
+git push origin main
+```
+
+## Benefits of Dockerizing Your Application
+
+1. **Consistent Environment**: Runs the same way on any machine
+2. **Easy Deployment**: One command to start the entire application
+3. **Isolation**: Each service runs in its own container
+4. **Scalability**: Easy to scale individual services
+5. **Development**: New developers can start with just `docker-compose up`
+6. **Production Ready**: Can be deployed to any Docker-compatible platform
+
+## Next Steps
+
+1. **Test the Docker setup** thoroughly
+2. **Add health checks** to your Docker containers
+3. **Consider using Docker secrets** for sensitive data
+4. **Set up CI/CD** with GitHub Actions to build Docker images
+5. **Deploy to cloud platforms** like AWS, Azure, or Google Cloud
+
+Your ShoppingCart3 application is now fully dockerized and ready for deployment anywhere!

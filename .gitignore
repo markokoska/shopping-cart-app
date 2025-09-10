@@ -118,3 +118,23 @@ jspm_packages/
 
 # TernJS port file
 .tern-port
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# Data directory (for local development)
+data/
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Logs
+logs/
+*.log
+
+# IDE
+.idea/
+.vscode/

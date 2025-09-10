@@ -1,0 +1,103 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  database:
+    image: postgres:15-alpine
+    container_name: shopping-cart-db
+    environment:
+      POSTGRES_DB: shoppingcart
+      POSTGRES_USER: shoppingcart_user
+      POSTGRES_PASSWORD: shoppingcart_password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d
+    networks:
+      - shopping-cart-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shoppingcart_user -d shoppingcart"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: shopping-cart-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - shopping-cart-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend Service
+  backend:
+    build: .
+    container_name: shopping-cart-backend
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://database:5432/shoppingcart
+      - SPRING_DATASOURCE_USERNAME=shoppingcart_user
+      - SPRING_DATASOURCE_PASSWORD=shoppingcart_password
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.PostgreSQLDialect
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
+    depends_on:
+      - database
+      - redis
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - shopping-cart-network
+    restart: unless-stopped
+
+  # Frontend Service
+  frontend:
+    build: ./frontend
+    container_name: shopping-cart-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - shopping-cart-network
+    restart: unless-stopped
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: shopping-cart-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - shopping-cart-network
+    restart: unless-stopped
+
+networks:
+  shopping-cart-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
