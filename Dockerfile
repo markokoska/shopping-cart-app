@@ -1,5 +1,4 @@
-@"
-# Use Maven image for building
+﻿# Use Maven image for building
 FROM maven:3.9.5-openjdk-17-slim AS build
 
 # Set working directory
@@ -34,4 +33,3 @@ RUN mkdir -p /app/logs
 
 # Run the application
 CMD ["java", "-jar", "app.jar"]
-"@ | Out-File -FilePath "Dockerfile" -Encoding UTF8

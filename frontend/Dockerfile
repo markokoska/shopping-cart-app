@@ -1,4 +1,4 @@
-# Build stage
+﻿# Build stage
 FROM node:18-alpine AS build
 
 # Set working directory
@@ -7,7 +7,7 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies (use npm install instead of npm ci)
+# Install dependencies
 RUN npm install
 
 # Copy source code
