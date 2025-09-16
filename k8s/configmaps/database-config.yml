@@ -1,0 +1,9 @@
+﻿apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: database-config
+  namespace: shopping-cart
+data:
+  POSTGRES_DB: "shoppingcart"
+  POSTGRES_USER: "shoppingcart_user"
+  POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"

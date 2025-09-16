@@ -1,7 +1,5 @@
-version: '3.8'
 
 services:
-  # PostgreSQL Database
   database:
     image: postgres:15-alpine
     container_name: shopping-cart-db
@@ -24,7 +22,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # Redis Cache
   redis:
     image: redis:7-alpine
     container_name: shopping-cart-redis
@@ -41,7 +38,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # Backend Service
   backend:
     build: .
     container_name: shopping-cart-backend
@@ -65,7 +61,6 @@ services:
       - shopping-cart-network
     restart: unless-stopped
 
-  # Frontend Service
   frontend:
     build: ./frontend
     container_name: shopping-cart-frontend
@@ -77,12 +72,11 @@ services:
       - shopping-cart-network
     restart: unless-stopped
 
-  # Nginx Reverse Proxy
   nginx:
     image: nginx:alpine
     container_name: shopping-cart-nginx
     ports:
-      - "80:80"
+      - "8090:80"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
     depends_on:

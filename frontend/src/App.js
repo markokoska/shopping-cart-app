@@ -9,8 +9,8 @@ import Cart from './components/Cart';
 import OrderHistory from './components/OrderHistory';
 import AdminPanel from './components/AdminPanel';
 
-// Set up axios defaults
-axios.defaults.baseURL = 'http://localhost:8080/api';
+// Set up axios defaults - use relative URLs so it works through Ingress
+axios.defaults.baseURL = '/api';
 
 function App() {
   const [user, setUser] = useState(null);
